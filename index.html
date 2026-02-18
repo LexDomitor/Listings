@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listing Manager Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        /* Sleek Modern CSS */
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-bg: #fee2e2;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 3rem 2rem;
+        }
+        
+        /* Main Header Layout */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 3rem auto;
+        }
+        .page-header h1 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+        .header-actions-main {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .header-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .header-btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Grid Carousel CSS */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .carousel-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        .carousel-img.active {
+            opacity: 1;
+        }
+
+        .card-img-placeholder {
+            width: 100%;
+            height: 180px;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-price {
+            font-size: 1.25rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .card-condition {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            align-self: flex-start;
+            margin-top: 0.25rem;
+        }
+        .add-btn-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #cbd5e1;
+            background-color: transparent;
+            min-height: 280px;
+            color: #94a3b8;
+            box-shadow: none;
+        }
+        .add-btn-card:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.04);
+            transform: translateY(-2px);
+            box-shadow: none;
+        }
+        .add-icon { font-size: 3rem; font-weight: 300; }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .modal {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95);
+            animation: scaleUp 0.2s forwards;
+        }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        
+        /* Drag & Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+            color: var(--primary);
+        }
+        .drop-zone p { margin: 1rem 0 0 0; font-size: 1rem; font-weight: 500; }
+        
+        /* Header Buttons */
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .close-btn:hover { background: #e2e8f0; color: var(--text-main); }
+        .delete-btn {
+            background: var(--danger-bg);
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover { background: #fca5a5; color: var(--danger-hover); }
+        .export-btn {
+            background: #e0f2fe;
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .export-btn:hover { background: #bae6fd; color: #0369a1; }
+        
+        /* Form & View Layout */
+        .form-group, .view-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .view-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .view-row .view-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .view-group {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        .view-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        .form-group label, .view-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group input, .form-group select {
+            padding: 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Inline Edit Inputs */
+        .edit-input {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            box-sizing: border-box;
+            font-family: inherit;
+            background: #ffffff;
+            margin-top: 0.25rem;
+            transition: all 0.2s;
+        }
+        .edit-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Image Input Specifics */
+        .image-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        .image-input-wrapper input { flex: 1; }
+        .add-image-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-image-btn:hover { background: #e2e8f0; }
+        
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .tiny-preview {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .tiny-preview:hover {
+            transform: scale(0.95);
+            filter: brightness(0.6);
+        }
+
+        .view-data {
+            font-size: 1.125rem;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        
+        /* Utility Buttons */
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 0.25rem;
+        }
+        .copy-btn:hover {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+        .copy-btn.save-mode {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .copy-btn.save-mode:hover { background: var(--primary-hover); }
+        .copy-btn.copied {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        /* Horizontal Image Scroller */
+        .image-scroller {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: thin;
+        }
+        .image-scroller::-webkit-scrollbar { height: 6px; }
+        .image-scroller::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+        .scroller-img {
+            height: 120px;
+            width: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: zoom-in;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+            transition: opacity 0.2s;
+        }
+        .scroller-img:hover { opacity: 0.8; }
+
+        /* Fullscreen Image Lightbox */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover { background: var(--primary-hover); }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h1>Inventory Listings</h1>
+        <div class="header-actions-main">
+            <button class="header-btn" onclick="exportAllToZip()">Export All</button>
+            <button class="header-btn" onclick="openImportModal()">Import JSON(s)</button>
+        </div>
+    </div>
+    
+    <div class="grid-container" id="grid"></div>
+
+    <div class="modal-overlay" id="importModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Import Listings</h2>
+                <div class="header-actions">
+                    <button type="button" class="close-btn" onclick="closeImportModal()">&times;</button>
+                </div>
+            </div>
+            <div class="drop-zone" id="dropZone">
+                <span class="add-icon" style="font-size: 4rem;">&#128194;</span>
+                <p>Drag & Drop JSON files here<br>or click to browse</p>
+                <input type="file" id="bulkImportFile" accept=".json" multiple style="display:none">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>New Listing</h2>
+                <div class="header-actions">
+                    <button type="button" class="close-btn" onclick="attemptCloseAddModal()">&times;</button>
+                </div>
+            </div>
+            <form id="listingForm">
+                <div class="form-group">
+                    <label for="name">Listing Name</label>
+                    <input type="text" id="name" required placeholder="e.g. Figma ChainsawMan POWER">
+                </div>
+                <div class="form-group">
+                    <label for="price">Price ($)</label>
+                    <input type="text" id="price" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="condition">Condition</label>
+                    <select id="condition" required>
+                        <option value="BRAND NEW SEALED">BRAND NEW SEALED</option>
+                        <option value="UNOPENED">UNOPENED</option>
+                        <option value="OPEN BOX">OPEN BOX</option>
+                        <option value="USED WITH BOX">USED WITH BOX</option>
+                        <option value="USED NO BOX">USED NO BOX</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="imageInput">Image References (Paste URLs)</label>
+                    <div class="image-input-wrapper">
+                        <input type="text" id="imageInput" placeholder="Paste an image URL and hit Enter">
+                        <button type="button" class="add-image-btn" id="addImageBtn">Add</button>
+                    </div>
+                    <div class="preview-container" id="previewContainer"></div>
+                </div>
+                <button type="submit" class="submit-btn">Save Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Listing Details</h2>
+                <div class="header-actions">
+                    <button class="export-btn" id="exportListingBtn" title="Export Listing">&#128190;</button>
+                    <button class="delete-btn" id="deleteListingBtn" title="Delete Listing">&#128465;</button>
+                    <button class="close-btn" onclick="closeViewModal()">&times;</button>
+                </div>
+            </div>
+            <div id="viewContent">
+                </div>
+        </div>
+    </div>
+
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+        <img src="" alt="Enlarged" class="lightbox-img" id="lightboxImg">
+    </div>
+
+    <script>
+        // IndexedDB Configuration
+        const dbName = "MarketplaceSessionDB";
+        const storeName = "listings";
+        let db;
+        let currentImageUrls = []; 
+        
+        // State for View/Edit Modal
+        let currentViewItem = null;
+        let editingField = null; 
+        let editImageUrls = [];
+
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = (e) => {
+                    let db = e.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+                    }
+                };
+                request.onsuccess = (e) => resolve(db = e.target.result);
+                request.onerror = (e) => reject("Error initializing IndexedDB");
+            });
+        };
+
+        const saveListing = (listing) => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readwrite");
+                const store = transaction.objectStore(storeName);
+                const request = store.add(listing);
+                request.onsuccess = () => resolve(request.result);
+            });
+        };
+
+        const updateListing = (listing) => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readwrite");
+                const store = transaction.objectStore(storeName);
+                const request = store.put(listing);
+                request.onsuccess = () => resolve(request.result);
+            });
+        };
+
+        const deleteListing = (id) => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readwrite");
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve(request.result);
+            });
+        };
+
+        const getListings = () => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readonly");
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+            });
+        };
+
+        // DOM Elements
+        const grid = document.getElementById('grid');
+        const importModalOverlay = document.getElementById('importModalOverlay');
+        const dropZone = document.getElementById('dropZone');
+        const bulkImportFile = document.getElementById('bulkImportFile');
+        const addModalOverlay = document.getElementById('addModalOverlay');
+        const viewModalOverlay = document.getElementById('viewModalOverlay');
+        const listingForm = document.getElementById('listingForm');
+        const priceInput = document.getElementById('price');
+        const imageInput = document.getElementById('imageInput');
+        const addImageBtn = document.getElementById('addImageBtn');
+        const previewContainer = document.getElementById('previewContainer');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+
+        // --- BULK IMPORT LOGIC ---
+        const openImportModal = () => importModalOverlay.style.display = 'flex';
+        const closeImportModal = () => importModalOverlay.style.display = 'none';
+
+        // Trigger hidden file input when clicking the drop zone
+        dropZone.addEventListener('click', () => bulkImportFile.click());
+
+        // Drag and Drop Events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) processImportFiles(e.dataTransfer.files);
+        });
+
+        // File Input Event
+        bulkImportFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) processImportFiles(e.target.files);
+        });
+
+        const processImportFiles = async (files) => {
+            const validFiles = Array.from(files).filter(f => f.name.endsWith('.json'));
+            if (validFiles.length === 0) {
+                alert("No valid JSON files found.");
+                return;
+            }
+
+            let successCount = 0;
+            for (let file of validFiles) {
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    const items = Array.isArray(data) ? data : [data];
+                    
+                    for (let item of items) {
+                        delete item.id; // Strip out existing ID
+                        item.name = item.name || "Imported Listing";
+                        item.price = item.price || "0.00";
+                        item.condition = item.condition || "UNKNOWN";
+                        item.images = item.images || "";
+                        await saveListing(item);
+                        successCount++;
+                    }
+                } catch (error) {
+                    console.error(`Error importing ${file.name}`, error);
+                }
+            }
+            renderGrid();
+            closeImportModal();
+            bulkImportFile.value = ''; // Reset input
+            alert(`Successfully imported ${successCount} listing(s).`);
+        };
+
+        // --- EXPORT LOGIC ---
+        const exportAllToZip = async () => {
+            if (typeof JSZip === 'undefined') {
+                alert("JSZip library failed to load. Please check your internet connection.");
+                return;
+            }
+            
+            const listings = await getListings();
+            if (listings.length === 0) {
+                alert("No listings available to export.");
+                return;
+            }
+
+            const zip = new JSZip();
+            
+            listings.forEach((item, index) => {
+                const { id, ...exportData } = item;
+                // Create a clean filename
+                const safeName = item.name ? item.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'listing';
+                const fileName = `${safeName}_${id || index}.json`; 
+                
+                zip.file(fileName, JSON.stringify(exportData, null, 2));
+            });
+
+            zip.generateAsync({type: "blob"}).then((content) => {
+                const url = URL.createObjectURL(content);
+                const downloadNode = document.createElement('a');
+                downloadNode.href = url;
+                downloadNode.download = "inventory_listings_export.zip";
+                document.body.appendChild(downloadNode);
+                downloadNode.click();
+                downloadNode.remove();
+                URL.revokeObjectURL(url);
+            });
+        };
+
+        const exportListing = (item) => {
+            const { id, ...exportData } = item;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const fileName = (item.name ? item.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : "listing") + ".json";
+            
+            const downloadNode = document.createElement('a');
+            downloadNode.setAttribute("href", dataStr);
+            downloadNode.setAttribute("download", fileName);
+            document.body.appendChild(downloadNode); 
+            downloadNode.click();
+            downloadNode.remove();
+        };
+
+        // Price Input Validation
+        priceInput.addEventListener('keydown', (e) => {
+            if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+        });
+        priceInput.addEventListener('input', (e) => {
+            let val = e.target.value.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+            if (parts.length === 2 && parts[1].length > 2) val = parts[0] + '.' + parts[1].substring(0, 2);
+            e.target.value = val;
+        });
+        priceInput.addEventListener('blur', (e) => {
+            if(e.target.value) {
+                const num = parseFloat(e.target.value);
+                if(!isNaN(num)) e.target.value = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        });
+        priceInput.addEventListener('focus', (e) => {
+            e.target.value = e.target.value.replace(/,/g, '');
+        });
+
+        // Add Modal Image Handling
+        const processImageUrl = () => {
+            const url = imageInput.value.trim();
+            if (url) {
+                currentImageUrls.push(url);
+                imageInput.value = '';
+                renderTinyPreviews();
+            }
+        };
+        addImageBtn.addEventListener('click', processImageUrl);
+        imageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                processImageUrl();
+            }
+        });
+
+        const renderTinyPreviews = () => {
+            previewContainer.innerHTML = '';
+            currentImageUrls.forEach((url, index) => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'tiny-preview';
+                img.title = 'Click to remove';
+                img.onerror = function() {
+                    this.onerror = null; 
+                    this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+                };
+                img.onclick = () => {
+                    if(confirm("Are you sure you want to remove this image?")) {
+                        currentImageUrls.splice(index, 1);
+                        renderTinyPreviews();
+                    }
+                };
+                previewContainer.appendChild(img);
+            });
+        };
+
+        // Modal Functions
+        const openAddModal = () => {
+            currentImageUrls = [];
+            previewContainer.innerHTML = '';
+            addModalOverlay.style.display = 'flex';
+        };
+        
+        const forceCloseAddModal = () => {
+            addModalOverlay.style.display = 'none';
+            listingForm.reset();
+            currentImageUrls = [];
+            previewContainer.innerHTML = '';
+        };
+
+        const attemptCloseAddModal = () => {
+            const nameVal = document.getElementById('name').value;
+            const priceVal = document.getElementById('price').value;
+            const imageInputVal = document.getElementById('imageInput').value;
+            
+            if (nameVal || priceVal || imageInputVal || currentImageUrls.length > 0) {
+                const confirmClose = confirm("Warning: You have unsaved data. Are you sure you want to close and lose your progress?");
+                if (!confirmClose) return; 
+            }
+            forceCloseAddModal();
+        };
+
+        const closeViewModal = () => {
+            editingField = null; 
+            viewModalOverlay.style.display = 'none';
+        };
+
+        const attemptDelete = async (id) => {
+            const confirmDelete = confirm("Warning: Are you sure you want to permanently delete this listing? This action cannot be undone.");
+            if (confirmDelete) {
+                await deleteListing(id);
+                closeViewModal();
+                renderGrid();
+            }
+        };
+
+        // Edit Mode Functions
+        const toggleEdit = (field) => {
+            editingField = field;
+            if (field === 'images') {
+                editImageUrls = currentViewItem.images ? currentViewItem.images.split(',').map(url => url.trim()).filter(url => url !== '') : [];
+            }
+            renderViewModal(currentViewItem);
+            if (field === 'images') {
+                renderEditTinyPreviews();
+            }
+        };
+
+        const cancelEdit = () => {
+            editingField = null;
+            renderViewModal(currentViewItem);
+        };
+
+        const saveField = async (field) => {
+            if (field === 'name') {
+                currentViewItem.name = document.getElementById('editName').value;
+            } else if (field === 'price') {
+                let p = document.getElementById('editPrice').value.replace(/,/g, '');
+                if (p && !isNaN(parseFloat(p))) {
+                    currentViewItem.price = parseFloat(p).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            } else if (field === 'condition') {
+                currentViewItem.condition = document.getElementById('editCondition').value;
+            } else if (field === 'images') {
+                currentViewItem.images = editImageUrls.join(', ');
+            }
+            
+            await updateListing(currentViewItem);
+            editingField = null;
+            renderGrid();
+            renderViewModal(currentViewItem);
+        };
+
+        // Inline Image Editing
+        const addEditImage = () => {
+            const input = document.getElementById('editImageInput');
+            const url = input.value.trim();
+            if (url) {
+                editImageUrls.push(url);
+                input.value = '';
+                renderEditTinyPreviews();
+            }
+        };
+
+        const renderEditTinyPreviews = () => {
+            const container = document.getElementById('editPreviewContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            editImageUrls.forEach((url, index) => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'tiny-preview';
+                img.title = 'Click to remove';
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+                };
+                img.onclick = () => {
+                    if(confirm("Are you sure you want to remove this image?")) {
+                        editImageUrls.splice(index, 1);
+                        renderEditTinyPreviews();
+                    }
+                };
+                container.appendChild(img);
+            });
+        };
+
+        // Lightbox & Clipboard
+        const openLightbox = (src) => {
+            lightboxImg.src = src;
+            lightbox.style.display = 'flex';
+        };
+        const closeLightbox = () => lightbox.style.display = 'none';
+
+        const copyToClipboard = async (text, btnElement) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = btnElement.innerText;
+                btnElement.innerText = 'Copied!';
+                btnElement.classList.add('copied');
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        };
+
+        // View / Edit Modal Rendering
+        const renderViewModal = (item) => {
+            currentViewItem = item;
+            const viewContent = document.getElementById('viewContent');
+            
+            // Bind Header Buttons
+            document.getElementById('deleteListingBtn').onclick = () => attemptDelete(item.id);
+            document.getElementById('exportListingBtn').onclick = () => exportListing(item);
+            
+            // Name Block
+            let nameHTML = '';
+            if (editingField === 'name') {
+                nameHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Listing Name</span>
+                        <div>
+                            <button class="copy-btn save-mode" onclick="saveField('name')">Save</button>
+                            <button class="copy-btn" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                    </div>
+                    <input type="text" id="editName" class="edit-input" value="${item.name.replace(/"/g, '&quot;')}">
+                `;
+            } else {
+                nameHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Listing Name</span>
+                        <div>
+                            <button class="copy-btn" onclick="copyToClipboard('${item.name.replace(/'/g, "\\'")}', this)">Copy</button>
+                            <button class="copy-btn" onclick="toggleEdit('name')">Edit</button>
+                        </div>
+                    </div>
+                    <div class="view-data">${item.name}</div>
+                `;
+            }
+
+            // Price Block
+            let priceHTML = '';
+            if (editingField === 'price') {
+                priceHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Price</span>
+                        <div>
+                            <button class="copy-btn save-mode" onclick="saveField('price')">Save</button>
+                            <button class="copy-btn" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                    </div>
+                    <input type="text" id="editPrice" class="edit-input" value="${item.price}">
+                `;
+            } else {
+                priceHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Price</span>
+                        <div>
+                            <button class="copy-btn" onclick="copyToClipboard('${item.price}', this)">Copy</button>
+                            <button class="copy-btn" onclick="toggleEdit('price')">Edit</button>
+                        </div>
+                    </div>
+                    <div class="view-data">$${item.price}</div>
+                `;
+            }
+
+            // Condition Block
+            let conditionHTML = '';
+            if (editingField === 'condition') {
+                const conditions = ["BRAND NEW SEALED", "UNOPENED", "OPEN BOX", "USED WITH BOX", "USED NO BOX"];
+                const options = conditions.map(c => `<option value="${c}" ${item.condition === c ? 'selected' : ''}>${c}</option>`).join('');
+                conditionHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Condition</span>
+                        <div>
+                            <button class="copy-btn save-mode" onclick="saveField('condition')">Save</button>
+                            <button class="copy-btn" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                    </div>
+                    <select id="editCondition" class="edit-input">${options}</select>
+                `;
+            } else {
+                conditionHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Condition</span>
+                        <div>
+                            <button class="copy-btn" onclick="copyToClipboard('${item.condition}', this)">Copy</button>
+                            <button class="copy-btn" onclick="toggleEdit('condition')">Edit</button>
+                        </div>
+                    </div>
+                    <div class="view-data">${item.condition}</div>
+                `;
+            }
+
+            // Images Block
+            let imagesHTML = '';
+            if (editingField === 'images') {
+                imagesHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Images</span>
+                        <div>
+                            <button class="copy-btn save-mode" onclick="saveField('images')">Save</button>
+                            <button class="copy-btn" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                    </div>
+                    <div class="image-input-wrapper">
+                        <input type="text" id="editImageInput" class="edit-input" style="margin-top:0" placeholder="Paste image URL & hit Enter" onkeydown="if(event.key==='Enter'){event.preventDefault(); addEditImage();}">
+                        <button type="button" class="add-image-btn" onclick="addEditImage()">Add</button>
+                    </div>
+                    <div class="preview-container" id="editPreviewContainer"></div>
+                `;
+            } else {
+                const imageUrls = item.images ? item.images.split(',').map(url => url.trim()).filter(url => url !== '') : [];
+                let scrollerHTML = '<div class="view-data" style="color:var(--text-muted); font-size:0.875rem">No images provided</div>';
+                if (imageUrls.length > 0) {
+                    scrollerHTML = `<div class="image-scroller">
+                        ${imageUrls.map(url => `<img src="${url}" class="scroller-img" onclick="openLightbox('${url}')" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs='">`).join('')}
+                    </div>`;
+                }
+                imagesHTML = `
+                    <div class="view-group-header">
+                        <span class="view-label">Images</span>
+                        <div>
+                            <button class="copy-btn" onclick="copyToClipboard('${item.images.replace(/'/g, "\\'")}', this)">Copy URLs</button>
+                            <button class="copy-btn" onclick="toggleEdit('images')">Edit</button>
+                        </div>
+                    </div>
+                    ${scrollerHTML}
+                `;
+            }
+
+            viewContent.innerHTML = `
+                <div class="view-group">${nameHTML}</div>
+                <div class="view-row">
+                    <div class="view-group">${priceHTML}</div>
+                    <div class="view-group">${conditionHTML}</div>
+                </div>
+                <div class="view-group">${imagesHTML}</div>
+            `;
+            viewModalOverlay.style.display = 'flex';
+        };
+
+        const renderGrid = async () => {
+            grid.innerHTML = ''; 
+            const listings = await getListings();
+
+            listings.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => {
+                    editingField = null; 
+                    renderViewModal(item);
+                };
+                
+                const imageUrls = item.images ? item.images.split(',').map(url => url.trim()).filter(url => url !== '') : [];
+                
+                // Inject the Carousel Container if multiple images exist
+                let imageHTML = '';
+                if (imageUrls.length > 0) {
+                    imageHTML = `<div class="carousel-container card-img-placeholder" data-interval="${imageUrls.length > 1 ? 'true' : 'false'}">`;
+                    imageUrls.forEach((url, i) => {
+                        imageHTML += `<img src="${url}" class="carousel-img ${i === 0 ? 'active' : ''}" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs='">`;
+                    });
+                    imageHTML += `</div>`;
+                } else {
+                    imageHTML = `<div class="card-img-placeholder"></div>`;
+                }
+
+                card.innerHTML = `
+                    ${imageHTML}
+                    <h3 class="card-title">${item.name}</h3>
+                    <div class="card-price">$${item.price}</div>
+                    <div class="card-condition">${item.condition}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            const addBtn = document.createElement('div');
+            addBtn.className = 'card add-btn-card';
+            addBtn.innerHTML = `<span class="add-icon">+</span>`;
+            addBtn.onclick = openAddModal;
+            grid.appendChild(addBtn);
+        };
+
+        // Grid Image Carousel Interval Logic
+        setInterval(() => {
+            document.querySelectorAll('.carousel-container[data-interval="true"]').forEach(container => {
+                const images = container.querySelectorAll('.carousel-img');
+                if (images.length <= 1) return;
+                
+                let activeIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+                if (activeIndex === -1) activeIndex = 0; 
+                
+                images[activeIndex].classList.remove('active');
+                let nextIndex = (activeIndex + 1) % images.length;
+                images[nextIndex].classList.add('active');
+            });
+        }, 2500); 
+
+        // Event Listeners
+        importModalOverlay.addEventListener('click', (e) => {
+            if (e.target === importModalOverlay) closeImportModal();
+        });
+        viewModalOverlay.addEventListener('click', (e) => {
+            if (e.target === viewModalOverlay) closeViewModal();
+        });
+
+        listingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let priceVal = priceInput.value.replace(/,/g, '');
+            if(priceVal) {
+                const num = parseFloat(priceVal);
+                priceVal = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            const newListing = {
+                name: document.getElementById('name').value,
+                price: priceVal,
+                condition: document.getElementById('condition').value,
+                images: currentImageUrls.join(', ') 
+            };
+
+            await saveListing(newListing);
+            forceCloseAddModal();
+            renderGrid();
+        });
+
+        // Initialize Application
+        initDB().then(() => renderGrid()).catch(err => console.error(err));
+
+    </script>
+</body>
+</html>
